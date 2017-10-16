@@ -10,5 +10,11 @@ git clone https://github.com/maxchehab/gu-port-backend.git
 cd gu-port-backend
 go get && go build -o web-server && ./web-server
 ```
+
+Or if you already have go setup, you can run 
+``` 
+go get github.com/maxchehab/gu-port-backend
+```
+
 Access the api at localhost:8080
 
