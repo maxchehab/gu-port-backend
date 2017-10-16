@@ -1,2 +1,2 @@
 #!/bin/bash
-go build -o web-server && echo build successful && echo server running && ./web-server
+go build -o ./dist/web-server && echo build successful && echo server running && ./dist/web-server
