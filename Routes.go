@@ -33,9 +33,15 @@ var routes = Routes{
      Route{
           "Register",
           "POST",
-          "/register/",
+          "/register",
           Register,
      },
+	Route{
+		"LoginHandle",
+		"POST",
+		"/login",
+		LoginHandle,
+	},
 	Route{
 		"PagePagination",
 		"GET",

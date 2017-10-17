@@ -90,7 +90,7 @@ func PagePagination(w http.ResponseWriter, r *http.Request) {
 		Total:  0,
 	}
 
-	for i := 0; i < count; i++ {
+	for i := 0; i < len(m.Values); i++ {
 		name, _ := m.GetString(i, 2)
 		author, _ := m.GetString(i, 3)
 		body, _ := m.GetString(i, 4)
@@ -140,4 +140,18 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 	}
+}
+
+func LoginHandle(w http.ResponseWriter, r *http.Request){
+     w.Header().Set("Access-Control-Allow-Origin", "*")
+     r.ParseForm()
+     key := r.Form.Get("key")
+     password := r.Form.Get("password")
+
+     valid, session := Login(key, password)
+     if valid {
+          fmt.Fprintln(w, `{"session": "`+ string(session) +`", "valid":true}`)
+     }else{
+          fmt.Fprintln(w, `{"valid":false}`)
+     }
 }

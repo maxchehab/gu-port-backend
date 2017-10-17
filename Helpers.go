@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+     "os/exec"
 
 	"github.com/siddontang/go-mysql/client"
 	"golang.org/x/crypto/bcrypt"
@@ -115,4 +116,30 @@ func GenerateHash(password string) string {
 func CompareHash(hashedPassword string, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return (err == nil)
+}
+
+func Login(key string, password string) (bool, string) {
+     conn, _ := client.Connect("104.236.141.69:3306", "gu-port", "gu-port", "gu-port")
+     conn.Ping()
+     query:= `SELECT userID, password FROM users WHERE username='` + key + `' OR email='` + key + `' OR session='` + key + `'`
+     q, _ := conn.Execute(query)
+
+     userID := int64(-1)
+     for i := 0; i < len(q.Values); i++{
+          q_password, _ := q.GetString(i,1)
+          if CompareHash(q_password, password){
+               userID, _ = q.GetInt(i, 0)
+               break;
+          }
+     }
+
+     if(userID >= 0){
+          session_b, _ := exec.Command("uuidgen").Output()
+          session := stripSpaces(string(session_b))
+          conn.Execute(`UPDATE users SET session='` + session + `' WHERE userID='` + strconv.Itoa(int(userID)) + `' LIMIT 1`)
+
+          return true, session
+     }else{
+          return false, ""
+     }
 }
