@@ -11,7 +11,6 @@ import (
 	"unicode"
 
 	"github.com/gorilla/mux"
-	"github.com/siddontang/go-mysql/client"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -40,7 +39,7 @@ func PageShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, _ := client.Connect("104.236.141.69:3306", "gu-port", "gu-port", "gu-port")
+	conn, _ := SQLConnect()
 
 	conn.Ping()
 
@@ -75,7 +74,7 @@ func PagePagination(w http.ResponseWriter, r *http.Request) {
 	offset, _ := strconv.Atoi(vars["offset"])
 	offset *= count
 
-	conn, _ := client.Connect("104.236.141.69:3306", "gu-port", "gu-port", "gu-port")
+	conn, _ := SQLConnect()
 
 	conn.Ping()
 	m, _ := conn.Execute(`SELECT * FROM pages LIMIT ` + strconv.Itoa(offset) + `,` + strconv.Itoa(count))
@@ -132,7 +131,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		password = GenerateHash(password)
 		session_b, _ := exec.Command("uuidgen").Output()
 		session := stripSpaces(string(session_b))
-		conn, _ := client.Connect("104.236.141.69:3306", "gu-port", "gu-port", "gu-port")
+		conn, _ := SQLConnect()
 		conn.Ping()
 		conn.Execute(`INSERT INTO users (userID, username, email, access_code, password, session)
 					VALUES (NULL, '` + username + `', '` + email + `', '` + accessCode + `', '` + password + `', '` + string(session) + `')`)
@@ -168,7 +167,7 @@ func FieldCheck(username string, email string, password string, accessCode strin
 		AccessCode: Validator{Valid: true},
 	}
 
-	conn, _ := client.Connect("104.236.141.69:3306", "gu-port", "gu-port", "gu-port")
+	conn, _ := SQLConnect()
 
 	conn.Ping()
 	uM, _ := conn.Execute(`SELECT COUNT(userID) FROM users WHERE username='` + username + `'`)
