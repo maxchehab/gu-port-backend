@@ -56,20 +56,20 @@ Access the api at localhost:8080
 
 ### Register `POST`
 #### Request:
-`localhost:8080/register/`
+`localhost:8080/register`
 Parameters:
 ```json
-access_code: test
-email: maxchehab@gmail.com
-password: mypassword
-username: maxchehab
+access_code: {access_code}
+email: {email}
+password: {password}
+username: {username}
 ```
 Body:
-`email=maxchehab%40gmail.com&username=mchehab&access_code=test&password=mypassword`
+`email={email}&username={username}&access_code={access_code}&password={password}`
 #### Response:
 ```json
 {
-   "session":"828f9691-2f4b-4d3d-93e0-3494d55944af",
+   "session":"{session}",
    "valid":true
 }
 ```
@@ -104,3 +104,28 @@ Body:
    "valid":false
 }
 ```
+
+### Login `POST`
+#### Request:
+`localhost:8080/login`
+Parameters:
+```json
+key: {email|username|session}
+password: {password}
+```
+Body:
+`key={email|username|session}&password={password}`
+#### Response:
+```json
+{
+   "session":"{session}",
+   "valid":true
+}
+```
+```json
+{
+   "valid":false
+}
+```
+
+
