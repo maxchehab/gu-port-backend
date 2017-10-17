@@ -31,27 +31,27 @@ func NewRouter() *mux.Router {
 
 var routes = Routes{
      Route{
-          "Register",
+          "RegisterHandler",
           "POST",
           "/register",
-          Register,
+          RegisterHandler,
      },
 	Route{
-		"LoginHandle",
+		"LoginHandler",
 		"POST",
 		"/login",
-		LoginHandle,
+		LoginHandler,
 	},
 	Route{
-		"PagePagination",
+		"BookHandler",
 		"GET",
 		"/pages/{count}/{offset}",
-		PagePagination,
+		BookHandler,
 	},
 	Route{
-		"PageShow",
+		"PageHandler",
 		"GET",
 		"/users/{userID}/pages/{pageID}",
-		PageShow,
+		PageHandler,
 	},
 }

@@ -1,6 +1,8 @@
 package main
 
-const BaseUrl = "104.236.141.69"
-const SQLPort = ":3306"
-const SQLUrl = BaseUrl + SQLPort
-const DBName = "gu-port"
+const BASEURL  = "104.236.141.69"
+const SQLPORT  = ":3306"
+const SQLURL   = BASEURL + SQLPORT
+const DBNAME   = "gu-port"
+const SQLUSER  = "gu-port"
+const SQLPASS  = "gu-port"

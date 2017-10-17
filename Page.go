@@ -1,5 +1,8 @@
 package main
 
+/*********************
+ * A Page is a struct representation of a markdown portfolio.
+ *********************/
 type Page struct {
     Name       string       `json:"name"`
     Body       string       `json:"body"`
@@ -7,5 +10,3 @@ type Page struct {
     PageID     string       `json:"pageID"`
     UserID     string       `json:"userID"`
 }
-
-type Pages []Page

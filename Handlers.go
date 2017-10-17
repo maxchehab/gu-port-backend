@@ -4,65 +4,46 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os/exec"
 	"strconv"
 
 	"github.com/gorilla/mux"
 )
 
-func Index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Welcome!")
-}
-
-func PageIndex(w http.ResponseWriter, r *http.Request) {
-	pages := Pages{
-		Page{Name: "Markdown numero uno"},
-		Page{Name: "Markdown numer dos"},
-	}
-
-	if err := json.NewEncoder(w).Encode(pages); err != nil {
-		panic(err)
-	}
-}
-
-func PageShow(w http.ResponseWriter, r *http.Request) {
+/*********************
+ * PageHandler takes a unique UserID and PageID and returns a Page that mathes the criteria.
+ * The UserID and PageId must be castable as an integer.
+ *********************/
+func PageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
 	userID := vars["userID"]
 	pageID := vars["pageID"]
-	if !Sanitized(userID, pageID) {
+	if !IsInt(userID, pageID) {
 		return
 	}
 
-	conn, _ := SQLConnect()
+	page, err := GetPage(pageID, userID)
 
-	conn.Ping()
-
-	m, _ := conn.Execute(`SELECT * FROM pages WHERE pageID=` + pageID + ` AND userID=` + userID)
-
-	name, _ := m.GetString(0, 2)
-	body, _ := m.GetString(0, 4)
-	author, _ := m.GetString(0, 3)
-	page := Page{
-		Name:   name,
-		Body:   body,
-		Author: author,
-		PageID: pageID,
-		UserID: userID,
-	}
-
-	if err := json.NewEncoder(w).Encode(page); err != nil {
+	if err != nil {
+		panic(err)
+	} else if err := json.NewEncoder(w).Encode(page); err != nil {
 		panic(err)
 	}
 }
 
-func PagePagination(w http.ResponseWriter, r *http.Request) {
+/*********************
+ * BookHandler takes a count and offset parameter.
+ * Count is defined as the ammount of pages returned with the Book.
+ * Offset the position in the database where pages will begin to be read.
+ * Count and offset must be castable as an integer.
+ *********************/
+func BookHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	vars := mux.Vars(r)
 
-	if !Sanitized(vars["count"], vars["offset"]) {
+	if !IsInt(vars["count"], vars["offset"]) {
 		return
 	}
 
@@ -70,51 +51,22 @@ func PagePagination(w http.ResponseWriter, r *http.Request) {
 	offset, _ := strconv.Atoi(vars["offset"])
 	offset *= count
 
-	conn, _ := SQLConnect()
+	book, err := GetBook(offset, count)
+	if err != nil {
 
-	conn.Ping()
-	m, _ := conn.Execute(`SELECT * FROM pages LIMIT ` + strconv.Itoa(offset) + `,` + strconv.Itoa(count))
-
-	type Book struct {
-		Pages  []Page `json:"pages"`
-		Count  int    `json:"count"`
-		Offset int    `json:"offset"`
-		Total  int    `json:"total"`
-	}
-
-	book := Book{
-		Pages:  []Page{},
-		Count:  count,
-		Offset: offset,
-		Total:  0,
-	}
-
-	for i := 0; i < len(m.Values); i++ {
-		name, _ := m.GetString(i, 2)
-		author, _ := m.GetString(i, 3)
-		body, _ := m.GetString(i, 4)
-		pageID, _ := m.GetString(i, 0)
-		userID, _ := m.GetString(i, 1)
-		page := Page{
-			Name:   name,
-			Author: author,
-			Body:   body,
-			PageID: pageID,
-			UserID: userID,
-		}
-		book.Pages = append(book.Pages, page)
-	}
-
-	l, _ := conn.Execute(`SELECT COUNT(pageID) FROM pages`)
-	total, _ := l.GetString(0, 0)
-	book.Total, _ = strconv.Atoi(total)
-
-	if err := json.NewEncoder(w).Encode(book); err != nil {
+	} else if err := json.NewEncoder(w).Encode(book); err != nil {
 		panic(err)
 	}
 }
 
-func Register(w http.ResponseWriter, r *http.Request) {
+/*********************
+ * RegisterHandler takes a username, email, password, and accessCode.
+ * If the parameters do not reach the standards of FieldCheck() then
+ * a custom error object (Params) will be returned explaining the errors.
+ * If the paramters reach the standards of FieldCheck() the user will be
+ * registered and a unique session string will be returned.
+ *********************/
+func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	r.ParseForm()
 	username := r.Form.Get("username")
@@ -124,16 +76,13 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	params := FieldCheck(username, email, password, accessCode)
 	if params.Valid {
-		password = GenerateHash(password)
-		session_b, _ := exec.Command("uuidgen").Output()
-		session := stripSpaces(string(session_b))
-		conn, _ := SQLConnect()
-		conn.Ping()
-		conn.Execute(`INSERT INTO users (userID, username, email, access_code, password, session)
-					VALUES (NULL, '` + username + `', '` + email + `', '` + accessCode + `', '` + password + `', '` + string(session) + `')`)
-		conn.Execute(`UPDATE access_codes SET valid=0 WHERE access_code='` + accessCode + `' LIMIT 1`)
-		fmt.Fprintln(w, `{"session": "`+string(session)+`", "valid":true}`)
-
+		session, err := Register(username, email, accessCode, password)
+		if err != nil {
+			fmt.Fprintln(w, `{"valid":false}`)
+			panic(err)
+		} else {
+			fmt.Fprintln(w, `{"session": "`+string(session)+`", "valid":true}`)
+		}
 	} else {
 		if err := json.NewEncoder(w).Encode(params); err != nil {
 			panic(err)
@@ -141,13 +90,23 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func LoginHandle(w http.ResponseWriter, r *http.Request) {
+/*********************
+ * LoginHandler takes a key and password. The key can be a username, email,
+ * or session. If the database does not contain any matches then an invalid
+ * JSON message will be returned. If there is a match in the database, a
+ * new session will be attached to the user and returned as a JSON object.
+ *********************/
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	r.ParseForm()
 	key := r.Form.Get("key")
 	password := r.Form.Get("password")
 
-	valid, session := Login(key, password)
+	valid, session, err := Login(key, password)
+	if err != nil {
+		panic(err)
+	}
+
 	if valid {
 		fmt.Fprintln(w, `{"session": "`+string(session)+`", "valid":true}`)
 	} else {
