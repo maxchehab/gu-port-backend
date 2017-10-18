@@ -15,8 +15,8 @@ go get && ./build
 Or if you already have go setup, you can run
 ```
 =======
-Or if you already have go setup, you can run 
-``` 
+Or if you already have go setup, you can run
+```
 >>>>>>> 3d45b81f44002046613ddc55f6e15685e080251c
 go get github.com/maxchehab/gu-port-backend
 ```
@@ -158,6 +158,7 @@ Body:
 #### Response:
 ```json
 {
+   "session":"{session}",
    "valid":true
 }
 ```

@@ -145,7 +145,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request){
 		if err != nil{
 			panic(err)
 		}else{
-			fmt.Fprintln(w, `{"valid":true}`)
+			fmt.Fprintln(w, `{"session": "`+string(session)+`", "valid":true}`)
 		}
 	} else {
 		fmt.Fprintln(w, `{"valid":false}`)
