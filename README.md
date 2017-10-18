@@ -4,16 +4,20 @@ A REST backend for https://github.com/Flaque/gu-port
 ## To set up...
 Install [golang](https://golang.org/doc/install).
 
-Run the following commands:
-```bash
-git clone https://github.com/maxchehab/gu-port-backend.git
-cd gu-port-backend
-go get && ./build
-```
-
 Or if you already have go setup, you can run 
 ``` 
 go get github.com/maxchehab/gu-port-backend
+```
+
+And then, in the project you'll find a script called `setup.sh`. Run that to install dependencies:
+
+```
+./setup.sh
+```
+
+Then, you can start the project with:
+```
+./build.sh
 ```
 
 Access the api at localhost:8080
