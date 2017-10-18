@@ -113,3 +113,42 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, `{"valid":false}`)
 	}
 }
+
+/*********************
+ * UploadHandler recieves a username and session cookie and a name and body form.
+ * It will fail if the user is not authenticated or if their is a MySQL error.
+ *********************/
+func UploadHandler(w http.ResponseWriter, r *http.Request){
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	r.ParseForm()
+
+	name := r.Form.Get("name")
+	body := r.Form.Get("body")
+	username_cookie, err := r.Cookie("username")
+	if err != nil {
+		panic(err)
+	}
+	username := username_cookie.Value
+	session_cookie, err := r.Cookie("session")
+	if err != nil {
+		panic(err)
+	}
+	session := session_cookie.Value
+
+	valid, session, err := Login(username, session)
+	if err != nil {
+		panic(err)
+	}
+
+	if valid {
+		err := AddPage(username, name, body)
+		if err != nil{
+			panic(err)
+		}else{
+			fmt.Fprintln(w, `{"valid":true}`)
+		}
+	} else {
+		fmt.Fprintln(w, `{"valid":false}`)
+	}
+
+}

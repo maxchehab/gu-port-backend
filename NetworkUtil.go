@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/siddontang/go-mysql/client"
 	"os/exec"
+	"errors"
 	"strconv"
 )
 
@@ -130,7 +131,7 @@ func Login(key string, password string) (bool, string, error) {
 		return false, "", err
 	}
 
-     query := `SELECT userID, password FROM users WHERE username='` + key + `' OR email='` + key + `' OR session='` + key + `'`
+     query := `SELECT userID, password, session FROM users WHERE username='` + key + `' OR email='` + key + `'`
      results, err := conn.Execute(query)
 	if err != nil {
 		return false, "", err
@@ -139,7 +140,9 @@ func Login(key string, password string) (bool, string, error) {
      userID := int64(-1)
      for i := 0; i < len(results.Values); i++{
           hashedPassword, _ := results.GetString(i,1)
-          if CompareHash(hashedPassword, password){
+		session, _ := results.GetString(i,2)
+
+          if CompareHash(hashedPassword, password) || session == password{
                userID, _ = results.GetInt(i, 0)
                break;
           }
@@ -197,4 +200,50 @@ func AccessCodeValid(accessCode string) (bool, error){
 		return false, err
 	}
 	return (len(results.Values) > 0), nil
+}
+
+/*********************
+ * AddPage adds a page to a database.
+ *********************/
+
+func AddPage(username string, name string, body string) (error){
+	userID, err := GetUserID(username)
+	if err != nil {
+		return err
+	}else if userID == "-1"{
+		return errors.New("Invalid userID {-1}")
+	}
+
+	conn, err := SQLConnect()
+	query := `INSERT INTO pages (pageID, userID, name, author, body)
+			VALUES (NULL, '` + userID + `', '` + name +`', '` + username + `', '` + body + `')`
+	_, err = conn.Execute(query)
+	return err
+}
+
+/*********************
+ * Given a username, GetUserID returns the userID as a string
+ * or "-1" if the username is not found.
+ *********************/
+func GetUserID(username string) (string, error){
+	conn, err := SQLConnect()
+	if err != nil {
+		return "-1", err
+	}
+	query := `SELECT userID FROM users WHERE username='` + username + `'`
+	results, err := conn.Execute(query)
+	if err != nil {
+		return "-1", err
+	}
+
+	if len(results.Values) > 0{
+		i, err := results.GetString(0,0)
+		if err != nil {
+			return "-1", err
+		}else{
+			return i, nil
+		}
+	}else{
+		return "-1", nil
+	}
 }

@@ -11,8 +11,8 @@ cd gu-port-backend
 go get && ./build
 ```
 
-Or if you already have go setup, you can run 
-``` 
+Or if you already have go setup, you can run
+```
 go get github.com/maxchehab/gu-port-backend
 ```
 
@@ -114,7 +114,7 @@ key: {email|username|session}
 password: {password}
 ```
 Body:
-`key={email|username|session}&password={password}`
+`key={email|username}&password={password|session}`
 #### Response:
 ```json
 {
@@ -127,5 +127,26 @@ Body:
    "valid":false
 }
 ```
+### Upload `POST`
+#### Request:
+`localhost:8080/pages/new`
+Parameters:
+```json
+Cookie: session={session|password}; username={username};
 
-
+name: {title}
+body: {body}
+```
+Body:
+`body=%23+title&name=name+of+thing`
+#### Response:
+```json
+{
+   "valid":true
+}
+```
+```json
+{
+   "valid":false
+}
+```

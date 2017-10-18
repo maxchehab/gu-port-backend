@@ -54,4 +54,10 @@ var routes = Routes{
 		"/users/{userID}/pages/{pageID}",
 		PageHandler,
 	},
+	Route{
+		"UploadHandler",
+		"POST",
+		"/pages/new",
+		UploadHandler,
+	},
 }
